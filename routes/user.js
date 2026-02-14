@@ -72,7 +72,7 @@ router.put(
 router.put('/toggle-2fa', toggleTwoFactorAuth);
 router.post(
   "/create-order",
-  // optional but recommended
+ authenticateUser,  // optional but recommended
   validateRequest({
     body: z.object({
       amount: z.number().positive(),
@@ -83,7 +83,7 @@ router.post(
 
 router.post(
   "/verify-payment",
-   // optional but recommended
+   authenticateUser, // optional but recommended
   validateRequest({
     body: z.object({
       razorpay_order_id: z.string(),
