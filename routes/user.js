@@ -7,7 +7,8 @@ import authenticateUser from "../middleware/auth-middleware.js";
 // } from "../controllers/user.js";
 import { z } from "zod";
 import { validateRequest } from "zod-express-middleware";
-import { changePassword, getUserProfile, sendVerificationEmail, toggleTwoFactorAuth, updateUserProfile } from "../controller/user.js";
+import { changePassword, createOrder, getUserProfile, sendVerificationEmail, toggleTwoFactorAuth, updateUserProfile, verifyPayment } from "../controller/user.js";
+
 
 const router = express.Router();
 
@@ -68,6 +69,30 @@ router.put(
 );
 
 
-router.put('/toggle-2fa', authenticateUser, toggleTwoFactorAuth);
+router.put('/toggle-2fa', toggleTwoFactorAuth);
+router.post(
+  "/create-order",
+  // optional but recommended
+  validateRequest({
+    body: z.object({
+      amount: z.number().positive(),
+    }),
+  }),
+  createOrder
+);
+
+router.post(
+  "/verify-payment",
+   // optional but recommended
+  validateRequest({
+    body: z.object({
+      razorpay_order_id: z.string(),
+      razorpay_payment_id: z.string(),
+      razorpay_signature: z.string(),
+    }),
+  }),
+  verifyPayment
+);
+
 
 export default router;

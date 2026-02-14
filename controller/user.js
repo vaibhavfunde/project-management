@@ -3,6 +3,8 @@ import { sendEmail } from "../libs/send-email.js";
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
 // import {sendEmail} from "../libs/send-email";
+import Razorpay from "razorpay";
+import crypto from "crypto";
 
 const getUserProfile = async (req, res) => {
   try {
@@ -152,6 +154,64 @@ export const sendVerificationEmail = async (req, res) => {
   } catch (error) {
     console.error("Error sending verification email:", error);
     res.status(500).json({ message: "Server error." });
+  }
+};
+
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+
+
+export const createOrder = async (req, res) => {
+  try {
+    const { amount } = req.body;
+
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ error: "Invalid amount" });
+    }
+
+    const order = await razorpay.orders.create({
+      amount: amount * 100,
+      currency: "INR",
+      receipt: "receipt_" + Date.now(),
+    });
+
+    res.json(order);
+  } catch (err) {
+    console.error("Create order error:", err);
+    res.status(500).json({ error: "Order creation failed" });
+  }
+};
+
+
+// ================= VERIFY PAYMENT =================
+
+export const verifyPayment = (req, res) => {
+  try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    } = req.body;
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body)
+      .digest("hex");
+
+    if (expectedSignature === razorpay_signature) {
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ success: false });
+    }
+  } catch (err) {
+    console.error("Verify payment error:", err);
+    res.status(500).json({ error: "Verification failed" });
   }
 };
 

@@ -4,6 +4,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import morgan from 'morgan';
 import router from './routes/index.js';
+import helmet from "helmet";
 
 dotenv.config();
 const app = express();
@@ -19,6 +20,8 @@ app.use(cors(
 ))
 
 app.use(morgan("dev"))
+
+app.use(helmet());
 
 //db connection
 
@@ -45,7 +48,7 @@ app.get('/', async(req, res) => {
 //http://localhost:5000/api-v1/
 app.use('/api-v1', router);
 
-// error handling middleware
+// error handling middleware 
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ message: 'Internal Server Error 1' });
